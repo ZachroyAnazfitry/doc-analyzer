@@ -1,0 +1,67 @@
+<!DOCTYPE html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1.0">
+  <title>Document Summarizer</title>
+  <style>
+    * { box-sizing: border-box; }
+    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
+    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
+    label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
+    textarea { width: 100%; min-height: 160px; padding: 0.5rem; font-size: 1rem; resize: vertical; }
+    button { margin-top: 0.75rem; padding: 0.5rem 1.25rem; font-size: 1rem; cursor: pointer; }
+    #summary { margin-top: 1rem; padding: 1rem; background: #f0f0f0; border-radius: 6px; white-space: pre-wrap; min-height: 60px; }
+    .error { color: #c00; }
+    .loading { opacity: 0.7; pointer-events: none; }
+  </style>
+</head>
+<body>
+  <h1>Document Summarizer</h1>
+  <p>Paste text below and click Summarize to get a short summary.</p>
+  <label for="input">Document text</label>
+  <textarea id="input" placeholder="Paste or type document text here..."></textarea>
+  <button id="btn">Summarize</button>
+  <label for="summary">Summary</label>
+  <div id="summary" aria-live="polite">—</div>
+
+  <script>
+    const input = document.getElementById('input');
+    const btn = document.getElementById('btn');
+    const summaryEl = document.getElementById('summary');
+
+    btn.addEventListener('click', async () => {
+      const text = input.value.trim();
+      if (!text) {
+        summaryEl.textContent = 'Please enter some text.';
+        summaryEl.classList.add('error');
+        return;
+      }
+      summaryEl.classList.remove('error');
+      summaryEl.textContent = 'Summarizing…';
+      btn.disabled = true;
+      document.body.classList.add('loading');
+      try {
+        const res = await fetch('/summarize', {
+          method: 'POST',
+          headers: { 'Content-Type': 'application/json' },
+          body: JSON.stringify({ text })
+        });
+        const data = await res.json();
+        if (!res.ok) {
+          summaryEl.textContent = data.detail || res.statusText || 'Request failed';
+          summaryEl.classList.add('error');
+          return;
+        }
+        summaryEl.textContent = data.summary || '—';
+      } catch (e) {
+        summaryEl.textContent = 'Network error: ' + e.message;
+        summaryEl.classList.add('error');
+      } finally {
+        btn.disabled = false;
+        document.body.classList.remove('loading');
+      }
+    });
+  </script>
+</body>
+</html>

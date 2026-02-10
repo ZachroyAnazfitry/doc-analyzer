@@ -1,0 +1,4 @@
+# Dev and CI: testing
+-r requirements.txt
+pytest>=7.0.0
+httpx>=0.26.0

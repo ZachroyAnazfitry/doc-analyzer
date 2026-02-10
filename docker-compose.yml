@@ -1,0 +1,12 @@
+services:
+  app:
+    build: .
+    ports:
+      - "8000:8000"   # host:container (use 8001 if 8000 is already in use)
+    volumes:
+      - ./app:/app/app
+    environment:
+      - MODEL_NAME=${MODEL_NAME:-sshleifer/distilbart-cnn-6-6}
+      - MAX_LENGTH=${MAX_LENGTH:-130}
+      - MIN_LENGTH=${MIN_LENGTH:-30}
+    command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
