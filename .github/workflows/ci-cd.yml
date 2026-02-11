@@ -2,9 +2,10 @@ name: CI/CD
 
 on:
   push:
-    branches: ["**"]
+    branches: [develop, main]
   pull_request:
-    branches: ["**"]
+    branches: [develop, main]
+  workflow_dispatch:
 
 env:
   AWS_REGION: us-east-1
