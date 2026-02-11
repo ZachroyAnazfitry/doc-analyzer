@@ -1,16 +1,15 @@
 """API tests using FastAPI TestClient; model is mocked to avoid loading HF in CI."""
-import pytest
 from fastapi.testclient import TestClient
 
-# Mock summarization before importing app (so model is not loaded)
 from app import model as model_module
+
 
 def _fake_summarize(text: str, max_length: int | None = None, min_length: int | None = None) -> str:
     return "Summary of the document."
 
-model_module.summarize = _fake_summarize
 
-from app.main import app
+model_module.summarize = _fake_summarize
+from app.main import app  # noqa: E402
 
 client = TestClient(app)
 
