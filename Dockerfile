@@ -1,6 +1,9 @@
 # Production-style single stage; same image for local prod run and ECR/ECS
 FROM python:3.10-slim
 
+ARG VERSION=dev
+ENV APP_VERSION=${VERSION}
+
 WORKDIR /app
 
 COPY requirements.txt /app/
