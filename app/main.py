@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from app.config import MODEL_NAME
 from app.model import summarize
 
 APP_VERSION = os.getenv("APP_VERSION", "dev")
@@ -40,7 +41,7 @@ class SummarizeResponse(BaseModel):
 @app.get("/health")
 def health_check():
     """Health check for load balancers and monitoring."""
-    return {"status": "ok", "version": APP_VERSION}
+    return {"status": "ok", "version": APP_VERSION, "model": MODEL_NAME}
 
 
 @app.get("/version")

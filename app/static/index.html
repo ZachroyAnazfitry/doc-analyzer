@@ -24,7 +24,7 @@
   <button id="btn">Summarize</button>
   <label for="summary">Summary</label>
   <div id="summary" aria-live="polite">—</div>
-  <p id="version" style="margin-top:2rem;font-size:0.875rem;color:#666;">Version: —</p>
+  <p id="footer" style="margin-top:2rem;font-size:0.875rem;color:#666;">Version: — · Model: —</p>
 
   <script>
     const input = document.getElementById('input');
@@ -64,8 +64,12 @@
       }
     });
     fetch('/health').then(r => r.json()).then(d => {
-      const el = document.getElementById('version');
-      if (el && d.version) el.textContent = 'Version: ' + d.version;
+      const el = document.getElementById('footer');
+      if (el) {
+        const v = d.version || '—';
+        const m = d.model || '—';
+        el.textContent = 'Version: ' + v + ' · Model: ' + m;
+      }
     }).catch(() => {});
   </script>
 </body>
