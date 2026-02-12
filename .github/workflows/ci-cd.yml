@@ -2,9 +2,10 @@ name: CI/CD
 
 on:
   push:
-    branches: ["**"]
+    branches: [develop, main]
   pull_request:
-    branches: ["**"]
+    branches: [develop, main]
+  workflow_dispatch:
 
 env:
   AWS_REGION: us-east-1
@@ -28,7 +29,7 @@ jobs:
       - name: Lint (Ruff)
         run: |
           pip install ruff
-          ruff check app/ tests/ --output-format=default
+          ruff check app/ tests/ --output-format=github
 
       - name: Test
         run: pytest tests/ -v
