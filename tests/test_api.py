@@ -17,7 +17,15 @@ client = TestClient(app)
 def test_health():
     r = client.get("/health")
     assert r.status_code == 200
-    assert r.json() == {"status": "ok"}
+    data = r.json()
+    assert data["status"] == "ok"
+    assert "version" in data
+
+
+def test_version():
+    r = client.get("/version")
+    assert r.status_code == 200
+    assert "version" in r.json()
 
 
 def test_summarize():
