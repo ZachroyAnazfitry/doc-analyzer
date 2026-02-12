@@ -1,4 +1,5 @@
 """FastAPI app: health, summarize endpoint, and static UI."""
+import os
 from pathlib import Path
 
 from fastapi import FastAPI
@@ -8,10 +9,12 @@ from pydantic import BaseModel, Field
 
 from app.model import summarize
 
+APP_VERSION = os.getenv("APP_VERSION", "dev")
+
 app = FastAPI(
     title="Document Summarizer API",
     description="Summarize documents using a Hugging Face model.",
-    version="0.1.0",
+    version=APP_VERSION,
 )
 
 # Mount static files for UI (after routes so / is overridable)
@@ -37,7 +40,13 @@ class SummarizeResponse(BaseModel):
 @app.get("/health")
 def health_check():
     """Health check for load balancers and monitoring."""
-    return {"status": "ok"}
+    return {"status": "ok", "version": APP_VERSION}
+
+
+@app.get("/version")
+def version():
+    """Return the deployed image version (e.g. v1.0.123)."""
+    return {"version": APP_VERSION}
 
 
 @app.get("/")
