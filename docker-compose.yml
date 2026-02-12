@@ -6,7 +6,7 @@ services:
     volumes:
       - ./app:/app/app
     environment:
-      - MODEL_NAME=${MODEL_NAME:-sshleifer/distilbart-cnn-6-6}
+      - MODEL_NAME=${MODEL_NAME:-Falconsai/text_summarization}
       - MAX_LENGTH=${MAX_LENGTH:-130}
       - MIN_LENGTH=${MIN_LENGTH:-30}
     command: uvicorn app.main:app --host 0.0.0.0 --port 8000 --reload
