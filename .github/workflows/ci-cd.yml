@@ -4,7 +4,7 @@ on:
   push:
     branches: [develop, main]
   pull_request:
-    branches: [develop, main]
+    branches: [develop]
   workflow_dispatch:
 
 env:
@@ -12,6 +12,7 @@ env:
 
 jobs:
   ci:
+    if: github.ref == 'refs/heads/develop' || (github.event_name == 'pull_request' && github.base_ref == 'develop')
     runs-on: ubuntu-latest
     steps:
       - uses: actions/checkout@v4
@@ -38,7 +39,6 @@ jobs:
         run: docker build -t doc-analyzer:ci .
 
   cd:
-    needs: ci
     if: github.ref == 'refs/heads/main' && github.event_name == 'push'
     runs-on: ubuntu-latest
     steps:
@@ -64,3 +64,11 @@ jobs:
           docker build -t $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG -t $ECR_REGISTRY/$ECR_REPOSITORY:latest .
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:$IMAGE_TAG
           docker push $ECR_REGISTRY/$ECR_REPOSITORY:latest
+
+      - name: Deploy to ECS
+        run: |
+          aws ecs update-service \
+            --cluster ${{ vars.ECS_CLUSTER || 'doc-analyzer-cluster' }} \
+            --service ${{ vars.ECS_SERVICE || 'doc-analyzer-service' }} \
+            --force-new-deployment \
+            --region ${{ env.AWS_REGION }}
