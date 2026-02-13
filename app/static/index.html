@@ -6,40 +6,179 @@
   <title>Document Summarizer</title>
   <style>
     * { box-sizing: border-box; }
-    body { font-family: system-ui, sans-serif; max-width: 720px; margin: 2rem auto; padding: 0 1rem; }
-    h1 { font-size: 1.5rem; margin-bottom: 1rem; }
-    label { display: block; font-weight: 600; margin-bottom: 0.25rem; }
-    textarea { width: 100%; min-height: 160px; padding: 0.5rem; font-size: 1rem; resize: vertical; }
-    button { margin-top: 0.75rem; padding: 0.5rem 1.25rem; font-size: 1rem; cursor: pointer; }
-    #summary { margin-top: 1rem; padding: 1rem; background: #f0f0f0; border-radius: 6px; white-space: pre-wrap; min-height: 60px; }
-    .error { color: #c00; }
-    .loading { opacity: 0.7; pointer-events: none; }
+    body {
+      font-family: system-ui, -apple-system, Segoe UI, sans-serif;
+      max-width: 800px;
+      margin: 0 auto;
+      padding: 2rem 1.5rem;
+      background: #f8fafc;
+      color: #1e293b;
+      line-height: 1.5;
+    }
+    h1 {
+      font-size: 1.75rem;
+      font-weight: 700;
+      margin: 0 0 0.25rem 0;
+      color: #0f172a;
+    }
+    .subtitle {
+      color: #64748b;
+      font-size: 0.95rem;
+      margin-bottom: 1.5rem;
+    }
+    .meta {
+      display: flex;
+      flex-wrap: wrap;
+      gap: 1rem;
+      margin-bottom: 1.5rem;
+      padding: 0.75rem 1rem;
+      background: #e2e8f0;
+      border-radius: 8px;
+      font-size: 0.875rem;
+    }
+    .meta span {
+      color: #475569;
+    }
+    .meta strong {
+      color: #334155;
+    }
+    .meta .model-name {
+      font-family: ui-monospace, monospace;
+      word-break: break-all;
+    }
+    label {
+      display: block;
+      font-weight: 600;
+      margin-bottom: 0.35rem;
+      color: #334155;
+    }
+    .hint {
+      font-size: 0.8125rem;
+      color: #64748b;
+      margin-top: 0.25rem;
+    }
+    textarea {
+      width: 100%;
+      min-height: 320px;
+      padding: 0.75rem 1rem;
+      font-size: 1rem;
+      line-height: 1.6;
+      resize: vertical;
+      border: 1px solid #cbd5e1;
+      border-radius: 8px;
+      background: #fff;
+      transition: border-color 0.15s, box-shadow 0.15s;
+    }
+    textarea:focus {
+      outline: none;
+      border-color: #2563eb;
+      box-shadow: 0 0 0 3px rgba(37, 99, 235, 0.15);
+    }
+    textarea::placeholder {
+      color: #94a3b8;
+    }
+    .actions {
+      margin-top: 1rem;
+    }
+    button {
+      padding: 0.65rem 1.5rem;
+      font-size: 1rem;
+      font-weight: 600;
+      cursor: pointer;
+      border: none;
+      border-radius: 8px;
+      background: #2563eb;
+      color: #fff;
+      transition: background 0.15s, transform 0.1s;
+    }
+    button:hover:not(:disabled) {
+      background: #1d4ed8;
+    }
+    button:active:not(:disabled) {
+      transform: scale(0.98);
+    }
+    button:disabled {
+      opacity: 0.7;
+      cursor: not-allowed;
+    }
+    .summary-section {
+      margin-top: 1.75rem;
+    }
+    #summary {
+      margin-top: 0.5rem;
+      padding: 1rem 1.25rem;
+      background: #fff;
+      border: 1px solid #e2e8f0;
+      border-radius: 8px;
+      white-space: pre-wrap;
+      min-height: 80px;
+      color: #334155;
+    }
+    #summary.placeholder {
+      color: #94a3b8;
+    }
+    .error {
+      color: #dc2626;
+      background: #fef2f2;
+      border-color: #fecaca;
+    }
+    .loading {
+      opacity: 0.7;
+      pointer-events: none;
+    }
   </style>
 </head>
 <body>
   <h1>Document Summarizer</h1>
-  <p>Paste text below and click Summarize to get a short summary.</p>
+  <p class="subtitle">Paste or type your document below. Longer texts are supported; the model will summarize the content.</p>
+
+  <div class="meta" id="meta" aria-live="polite">
+    <span>Model: <strong class="model-name" id="model-name">—</strong></span>
+    <span>Version: <strong id="version">—</strong></span>
+  </div>
+
   <label for="input">Document text</label>
-  <textarea id="input" placeholder="Paste or type document text here..."></textarea>
-  <button id="btn">Summarize</button>
-  <label for="summary">Summary</label>
-  <div id="summary" aria-live="polite">—</div>
-  <p id="version" style="margin-top:2rem;font-size:0.875rem;color:#666;">Version: —</p>
+  <p class="hint">Paste articles, notes, or any text you want summarized. Very long documents are truncated to the first ~4000 characters before summarization.</p>
+  <textarea id="input" placeholder="Paste or type your document here…" aria-describedby="input-hint"></textarea>
+  <p class="hint" id="input-hint">You can resize this area vertically if needed.</p>
+
+  <div class="actions">
+    <button type="button" id="btn">Summarize</button>
+  </div>
+
+  <div class="summary-section">
+    <label for="summary">Summary</label>
+    <div id="summary" class="placeholder" aria-live="polite">—</div>
+  </div>
 
   <script>
     const input = document.getElementById('input');
     const btn = document.getElementById('btn');
     const summaryEl = document.getElementById('summary');
 
+    function setSummary(text, isError) {
+      summaryEl.textContent = text || '—';
+      summaryEl.classList.toggle('error', !!isError);
+      summaryEl.classList.toggle('placeholder', !text || text === '—');
+    }
+
+    fetch('/info')
+      .then(r => r.json())
+      .then(d => {
+        const modelEl = document.getElementById('model-name');
+        const versionEl = document.getElementById('version');
+        if (modelEl && d.model_name) modelEl.textContent = d.model_name;
+        if (versionEl && d.version) versionEl.textContent = d.version;
+      })
+      .catch(() => {});
+
     btn.addEventListener('click', async () => {
       const text = input.value.trim();
       if (!text) {
-        summaryEl.textContent = 'Please enter some text.';
-        summaryEl.classList.add('error');
+        setSummary('Please enter some text.', true);
         return;
       }
-      summaryEl.classList.remove('error');
-      summaryEl.textContent = 'Summarizing…';
+      setSummary('Summarizing…', false);
       btn.disabled = true;
       document.body.classList.add('loading');
       try {
@@ -50,23 +189,17 @@
         });
         const data = await res.json();
         if (!res.ok) {
-          summaryEl.textContent = data.detail || res.statusText || 'Request failed';
-          summaryEl.classList.add('error');
+          setSummary(data.detail || res.statusText || 'Request failed', true);
           return;
         }
-        summaryEl.textContent = data.summary || '—';
+        setSummary(data.summary || '—', false);
       } catch (e) {
-        summaryEl.textContent = 'Network error: ' + e.message;
-        summaryEl.classList.add('error');
+        setSummary('Network error: ' + e.message, true);
       } finally {
         btn.disabled = false;
         document.body.classList.remove('loading');
       }
     });
-    fetch('/health').then(r => r.json()).then(d => {
-      const el = document.getElementById('version');
-      if (el && d.version) el.textContent = 'Version: ' + d.version;
-    }).catch(() => {});
   </script>
 </body>
 </html>

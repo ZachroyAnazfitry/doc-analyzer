@@ -7,6 +7,7 @@ from fastapi.responses import FileResponse
 from fastapi.staticfiles import StaticFiles
 from pydantic import BaseModel, Field
 
+from app.config import MODEL_NAME
 from app.model import summarize
 
 APP_VERSION = os.getenv("APP_VERSION", "dev")
@@ -47,6 +48,12 @@ def health_check():
 def version():
     """Return the deployed image version (e.g. v1.0.123)."""
     return {"version": APP_VERSION}
+
+
+@app.get("/info")
+def info():
+    """Return app info for the UI (model name, version)."""
+    return {"model_name": MODEL_NAME, "version": APP_VERSION}
 
 
 @app.get("/")
